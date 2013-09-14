@@ -1,0 +1,15 @@
+SELECT
+  count(distinct COLUMN1),
+  COLUMN4,
+  COLUMN5,
+  COLUMN6
+FROM
+  TABLE2
+WHERE
+   COLUMN4  IN  ('Unknown','Location_33101','Location_30453')
+   AND
+   DT  =  '1373221800000'
+GROUP BY
+  COLUMN4,
+  COLUMN5,
+  COLUMN6

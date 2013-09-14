@@ -1,0 +1,1 @@
+select decode(dummy,'X','A','B') from dual
