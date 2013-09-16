@@ -7,10 +7,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class M3 {
+
+  static boolean initTmpFuncForEachConnection = true;
 
   private boolean go = true;
 
@@ -37,8 +40,8 @@ public class M3 {
       q[2] = m1.getQueryFromFile("q3.sql");
       q[3] = m1.getQueryFromFile("q4.sql");
 
-      int TH = 10;
-      int N = 1;
+      int TH = 4;
+      int N = 100;
       System.out.println("TH: " + TH);
       System.out.println("N: " + N);
 
@@ -132,39 +135,22 @@ public class M3 {
   Connection getConnection() throws SQLException, ClassNotFoundException {
     Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
     Connection con = DriverManager.getConnection(
-        "jdbc:hive://t1:10000/default", "", "");
+        "jdbc:hive://localhost:10000/default", "", "");
     // "jdbc:hive://vmhost5-gw:10000/default", "", "");
     // "jdbc:hive://vmhost10-vm5:10000/default", "", "");
     // "jdbc:hive://10.10.10.195:10000/default", "root", "");
 
-//    ArrayList<String> qq = new ArrayList<String>();
-//    qq.add("add jar /usr/local/lib/hive-udf/target/nexr-hive-udf-0.2-SNAPSHOT.jar");
-//    qq.add("CREATE TEMPORARY FUNCTION decode AS 'com.nexr.platform.hive.udf.GenericUDFDecode'");
-//
-//    Statement s = con.createStatement();
-//    for (String q : qq) {
-//      s.execute(q);
-//      System.out.println("prep OK: " + q);
-//    }
-//    close(s);
+    if (initTmpFuncForEachConnection) {
+      createTmpFunc(con);
+    }
 
     return con;
   }
 
   void close(Connection conn) {
-//    ArrayList<String> qq = new ArrayList<String>();
-//    qq.add("drop TEMPORARY FUNCTION decode");
-//
-//    try {
-//      Statement s = conn.createStatement();
-//      for (String q : qq) {
-//        s.execute(q);
-//        System.out.println("drop function OK: " + q);
-//      }
-//      close(s);
-//    } catch (Exception e) {
-//      System.out.println(e.getMessage());
-//    }
+    if (initTmpFuncForEachConnection) {
+      dropTmpFunc(conn);
+    }
 
     if (conn != null) {
       try {
@@ -172,6 +158,41 @@ public class M3 {
       } catch (Exception e) {
         // ignore
       }
+    }
+  }
+
+  void createTmpFunc(Connection con) throws SQLException {
+    List<String> qq = new ArrayList<String>();
+    qq.add("add jar /usr/local/lib/hive-udf/target/nexr-hive-udf-0.2-SNAPSHOT.jar");
+    qq.add("CREATE TEMPORARY FUNCTION decode AS 'com.nexr.platform.hive.udf.GenericUDFDecode'");
+
+    Statement s = con.createStatement();
+    try {
+      for (String q : qq) {
+        s.execute(q);
+        System.out.println("prep OK: " + q);
+      }
+    } finally {
+      close(s);
+    }
+  }
+
+  void dropTmpFunc(Connection con) {
+    List<String> qq = new ArrayList<String>();
+    qq.add("drop TEMPORARY FUNCTION decode");
+
+    try {
+      Statement s = con.createStatement();
+      try {
+        for (String q : qq) {
+          s.execute(q);
+          System.out.println("drop function OK: " + q);
+        }
+      } finally {
+        close(s);
+      }
+    } catch (Exception e) {
+      System.out.println(e.getMessage());
     }
   }
 
