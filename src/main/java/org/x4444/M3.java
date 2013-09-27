@@ -13,7 +13,7 @@ import java.util.Random;
 
 public class M3 {
 
-  static boolean initTmpFuncForEachConnection = true;
+  static boolean initTmpFuncForEachConnection = false;
 
   private boolean go = true;
 
@@ -40,8 +40,8 @@ public class M3 {
       q[2] = m1.getQueryFromFile("q3.sql");
       q[3] = m1.getQueryFromFile("q4.sql");
 
-      int TH = 4;
-      int N = 100;
+      int TH = 1;
+      int N = 1;
       System.out.println("TH: " + TH);
       System.out.println("N: " + N);
 
@@ -54,7 +54,6 @@ public class M3 {
       long time = System.currentTimeMillis();
 
       for (Thread t : ta) {
-        // Thread.sleep(1000);
         t.start();
       }
 
@@ -102,8 +101,6 @@ public class M3 {
             break;
           }
 
-          // Thread.sleep(1000);
-
           if (!m1.isGo()) {
             break;
           }
@@ -133,9 +130,11 @@ public class M3 {
   }
 
   Connection getConnection() throws SQLException, ClassNotFoundException {
-    Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
+    Class.forName("org.apache.hive.jdbc.HiveDriver");
+    // Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
     Connection con = DriverManager.getConnection(
-        "jdbc:hive://localhost:10000/default", "", "");
+        "jdbc:hive2://localhost:10000/default", "alexp", "");
+    // "jdbc:hive://localhost:10000/default", "", "");
     // "jdbc:hive://vmhost5-gw:10000/default", "", "");
     // "jdbc:hive://vmhost10-vm5:10000/default", "", "");
     // "jdbc:hive://10.10.10.195:10000/default", "root", "");
@@ -154,7 +153,9 @@ public class M3 {
 
     if (conn != null) {
       try {
+        System.out.println("closing conn");
         conn.close();
+        System.out.println("conn closed");
       } catch (Exception e) {
         // ignore
       }
@@ -199,7 +200,9 @@ public class M3 {
   void close(Statement st) {
     if (st != null) {
       try {
+        System.out.println("closing ps");
         st.close();
+        System.out.println("ps closed");
       } catch (Exception e) {
         // ignore
       }
@@ -213,22 +216,29 @@ public class M3 {
     PreparedStatement ps = conn.prepareStatement(query);
     try {
       ResultSet rs = ps.executeQuery();
-      int colN = rs.getMetaData().getColumnCount();
-      // if (colN != 2) {
-      // throw new RuntimeException("not 2 columns");
-      // }
-      // List<MyPair<String, String>> act = new ArrayList<MyPair<String,
-      // String>>();
-      while (rs.next()) {
-        for (int cid = 1; cid <= colN; cid++) {
-          String s = rs.getString(cid);
-          System.out.print(s);
-          if (cid == colN) {
-            System.out.println("\t");
-          } else {
-            System.out.print("\t");
+      try {
+        int colN = rs.getMetaData().getColumnCount();
+//        if (colN != 2) {
+//          throw new RuntimeException("not 2 columns");
+//        }
+//        List<MyPair<String, String>> act = new ArrayList<MyPair<String, String>>();
+        while (rs.next()) {
+          for (int cid = 1; cid <= colN; cid++) {
+            String s = rs.getString(cid);
+            System.out.print(s);
+            if (cid == colN) {
+              System.out.println("\t");
+            } else {
+              System.out.print("\t");
+            }
           }
         }
+      } catch (Exception e) {
+        e.printStackTrace();
+      } finally {
+        System.out.println("closing rs");
+        rs.close();
+        System.out.println("rs closed");
       }
 
       // printCol(name, act);
@@ -253,7 +263,9 @@ public class M3 {
   }
 
   String getQueryFromFile(String file) {
-    InputStream is = this.getClass().getResourceAsStream("/" + file);
+    String url = "/" + file;
+    InputStream is = this.getClass().getResourceAsStream(url);
+    assert is != null;
     java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
     String query = s.hasNext() ? s.next() : "";
     if (query == null || query.trim().length() == 0) {
