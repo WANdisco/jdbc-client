@@ -1,0 +1,2 @@
+#!/bin/bash
+./jdbcc -v -r -c jdbc:hive://subuntu:10000/default -i none -s 100  $@
