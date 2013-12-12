@@ -288,7 +288,11 @@ public class jdbcc {
   }
 
   Connection getConnection(String name) throws SQLException, ClassNotFoundException {
-    Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
+    if(connString.startsWith("jdbc:hive2"))
+      Class.forName("org.apache.hive.jdbc.HiveDriver");
+    else
+      Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
+
     Connection con = DriverManager.getConnection(connString, "", "");
     if(verbose)
       System.err.println(name + ": Connection opened, initing temp function...");
