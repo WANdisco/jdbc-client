@@ -19,6 +19,11 @@ public class jdbcc {
   private boolean go = true;
   private String connString =  "jdbc:hive://localhost:10000/default";
 
+
+  private String userName = "shark";
+
+  private String userPassword = "";
+
   String getConnString() {
     return connString;
   }
@@ -75,15 +80,35 @@ public class jdbcc {
     this.verbose = verbose;
   }
 
+  public String getUserName() {
+    return userName;
+  }
+
+  public void setUserName(String userName) {
+    this.userName = userName;
+  }
+
+  public String getUserPassword() {
+    return userPassword;
+  }
+
+  public void setUserPassword(String userPassword) {
+    this.userPassword = userPassword;
+  }
+
+
+
   public static void printUsage(jdbcc jc) {
     System.err.println("Usage: jdbcc [-t <k threads>|-r|-n <n iterations>|-i <init functions query>|" +
-        "-d <deinit query>|-s <time>|-p|-c <connection string>|-v] <query1 [query2...queryN]>\n");
+        "-d <deinit query>|-s <time>|-p|-u <user name>|-P <password>|-c <connection string>|-v] <query1 [query2...queryN]>\n");
     System.err.println("-t <k threads>               - set number of parallel threads throwing queries");
     System.err.println("-n <n iterations>            - number of iterations inside each of the threads");
     System.err.println("-i <file with init func>     - file with init queries - temp functions, etc");
     System.err.println("-d <file with deinit func>   - file with deinit queries - drop temp functions, etc");
     System.err.println("-s <timeout>                 - timeout between queries in a sequence/iterations");
     System.err.println("-c <connection string>       - Connection string to the server");
+    System.err.println("-u <user name>               - User name for this connection");
+    System.err.println("-P <password>                - Password for this user/connection");
     System.err.println("-r                           - run queries in random sequence");
     System.err.println("-v                           - verbose output messages\n");
 
@@ -126,6 +151,12 @@ public class jdbcc {
             continue;
           case 'c':
             jc.setConnString(args[++i]);
+            continue;
+          case 'u':
+            jc.setUserName(args[++i]);
+            continue;
+          case 'P':
+            jc.setUserPassword(args[++i]);
             continue;
           case 's':
             jc.setSleepBetween(Integer.parseInt(args[++i]));
@@ -293,7 +324,7 @@ public class jdbcc {
     else
       Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
 
-    Connection con = DriverManager.getConnection(connString, "", "");
+    Connection con = DriverManager.getConnection(connString, userName, userPassword);
     if(verbose)
       System.err.println(name + ": Connection opened, initing temp function...");
 
